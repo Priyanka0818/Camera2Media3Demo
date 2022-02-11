@@ -11,6 +11,7 @@ import com.app.camera2demo.databinding.ActivityMainBinding
  * Created by Priyanka
  */
 const val CAMERA_REQUEST_RESULT = 1
+const val VIDEO_REQUEST_RESULT = 2
 
 class MainActivity : AppCompatActivity() {
 
@@ -47,10 +48,9 @@ class MainActivity : AppCompatActivity() {
                     this@MainActivity, arrayOf(
                         Manifest.permission.CAMERA,
                         Manifest.permission.RECORD_AUDIO,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                        Manifest.permission.MANAGE_EXTERNAL_STORAGE
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
                     ),
-                    CAMERA_REQUEST_RESULT
+                    VIDEO_REQUEST_RESULT
                 ).checkPermissionGiven()
             ) {
                 startActivity(
@@ -61,11 +61,20 @@ class MainActivity : AppCompatActivity() {
                 )
             } else {
                 PermissionsCheck(
-                    this@MainActivity, arrayOf(Manifest.permission.CAMERA),
-                    CAMERA_REQUEST_RESULT
+                    this@MainActivity, arrayOf(
+                        Manifest.permission.CAMERA,
+                        Manifest.permission.RECORD_AUDIO,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    ),
+                    VIDEO_REQUEST_RESULT
                 ).requestPermission()
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        activityMainBinding = null
     }
 
     override fun onRequestPermissionsResult(
@@ -75,11 +84,26 @@ class MainActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (PermissionsCheck(
-                this@MainActivity, arrayOf(Manifest.permission.CAMERA),
+                this@MainActivity, arrayOf(
+                    Manifest.permission.CAMERA,
+                    Manifest.permission.RECORD_AUDIO,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    Manifest.permission.MANAGE_EXTERNAL_STORAGE
+                ),
+                VIDEO_REQUEST_RESULT
+            ).onRequestPermissionsResult(grantResults)
+        ) {
+            if (requestCode == VIDEO_REQUEST_RESULT)
+                startActivity(Intent(this, CaptureActivity::class.java))
+        } else if (PermissionsCheck(
+                this@MainActivity, arrayOf(
+                    Manifest.permission.CAMERA
+                ),
                 CAMERA_REQUEST_RESULT
             ).onRequestPermissionsResult(grantResults)
         ) {
-            startActivity(Intent(this, CaptureActivity::class.java))
+            if (requestCode == VIDEO_REQUEST_RESULT)
+                startActivity(Intent(this, CaptureActivity::class.java))
         }
     }
 }
