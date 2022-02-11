@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Camera2Demo</string>
+    <string name="take_photo">Take Photo</string>
+    <string name="record_video">Record Video</string>
+</resources>
