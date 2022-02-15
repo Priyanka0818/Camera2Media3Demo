@@ -3,6 +3,7 @@ package com.app.camera2demo
 import android.Manifest
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.app.camera2demo.databinding.ActivityMainBinding
 
@@ -13,9 +14,24 @@ import com.app.camera2demo.databinding.ActivityMainBinding
 const val CAMERA_REQUEST_RESULT = 1
 const val VIDEO_REQUEST_RESULT = 2
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), PermissionCallback {
 
     private var activityMainBinding: ActivityMainBinding? = null
+    val cameraPermCheck = PermissionsCheck(
+        this,
+        Manifest.permission.CAMERA,
+        requestCode = CAMERA_REQUEST_RESULT,
+        permissionCallback = this
+    )
+    val videoPermCheck = PermissionsCheck(
+        this,
+        Manifest.permission.CAMERA,
+        Manifest.permission.RECORD_AUDIO,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        requestCode = VIDEO_REQUEST_RESULT,
+        permissionCallback = this
+    )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         activityMainBinding = ActivityMainBinding.inflate(layoutInflater)
@@ -25,10 +41,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun initListeners() {
         activityMainBinding?.takePhotoBtn?.setOnClickListener {
-            if (PermissionsCheck(
-                    this@MainActivity, arrayOf(Manifest.permission.CAMERA),
-                    CAMERA_REQUEST_RESULT
-                ).checkPermissionGiven()
+            if (cameraPermCheck.checkPermission()
             ) {
                 startActivity(
                     Intent(this, CaptureActivity::class.java).putExtra(
@@ -37,21 +50,11 @@ class MainActivity : AppCompatActivity() {
                     )
                 )
             } else {
-                PermissionsCheck(
-                    this@MainActivity, arrayOf(Manifest.permission.CAMERA),
-                    CAMERA_REQUEST_RESULT
-                ).requestPermission()
+                cameraPermCheck.requestPermission()
             }
         }
         activityMainBinding?.recordVideoBtn?.setOnClickListener {
-            if (PermissionsCheck(
-                    this@MainActivity, arrayOf(
-                        Manifest.permission.CAMERA,
-                        Manifest.permission.RECORD_AUDIO,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE
-                    ),
-                    VIDEO_REQUEST_RESULT
-                ).checkPermissionGiven()
+            if (videoPermCheck.checkPermission()
             ) {
                 startActivity(
                     Intent(this, CaptureActivity::class.java).putExtra(
@@ -60,14 +63,7 @@ class MainActivity : AppCompatActivity() {
                     )
                 )
             } else {
-                PermissionsCheck(
-                    this@MainActivity, arrayOf(
-                        Manifest.permission.CAMERA,
-                        Manifest.permission.RECORD_AUDIO,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE
-                    ),
-                    VIDEO_REQUEST_RESULT
-                ).requestPermission()
+                videoPermCheck.requestPermission()
             }
         }
     }
@@ -83,27 +79,34 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (PermissionsCheck(
-                this@MainActivity, arrayOf(
-                    Manifest.permission.CAMERA,
-                    Manifest.permission.RECORD_AUDIO,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                    Manifest.permission.MANAGE_EXTERNAL_STORAGE
-                ),
-                VIDEO_REQUEST_RESULT
-            ).onRequestPermissionsResult(grantResults)
-        ) {
-            if (requestCode == VIDEO_REQUEST_RESULT)
-                startActivity(Intent(this, CaptureActivity::class.java))
-        } else if (PermissionsCheck(
-                this@MainActivity, arrayOf(
-                    Manifest.permission.CAMERA
-                ),
-                CAMERA_REQUEST_RESULT
-            ).onRequestPermissionsResult(grantResults)
-        ) {
-            if (requestCode == VIDEO_REQUEST_RESULT)
-                startActivity(Intent(this, CaptureActivity::class.java))
+        if (requestCode == VIDEO_REQUEST_RESULT) {
+            videoPermCheck.onRequestPermissionsResult(grantResults)
+        } else {
+            cameraPermCheck.onRequestPermissionsResult(grantResults)
         }
     }
+
+    override fun permissionGranted(vararg permissions: String, requestCode: Int) {
+        if (requestCode == VIDEO_REQUEST_RESULT) {
+            startActivity(
+                Intent(this, CaptureActivity::class.java).putExtra(
+                    "type",
+                    "video"
+                )
+            )
+        } else {
+            startActivity(
+                Intent(this, CaptureActivity::class.java).putExtra(
+                    "type",
+                    "image"
+                )
+            )
+        }
+    }
+
+    override fun permissionDenied(vararg permissions: String, requestCode: Int) {
+        Toast.makeText(this, "Permissions denied $permissions", Toast.LENGTH_SHORT)
+            .show()
+    }
+
 }

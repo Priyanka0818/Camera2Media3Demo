@@ -90,6 +90,7 @@ class CaptureActivity : AppCompatActivity() {
                     file
                 )
             )
+            finish()
         }
     }
 
@@ -198,6 +199,8 @@ class CaptureActivity : AppCompatActivity() {
         captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
         captureRequestBuilder.addTarget(previewSurface)
         captureRequestBuilder.addTarget(recordingSurface)
+        captureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
+
 
         cameraDevice.createCaptureSession(
             listOf(previewSurface, recordingSurface),
@@ -301,7 +304,7 @@ class CaptureActivity : AppCompatActivity() {
             ".mp4"
         ).absolutePath
         mediaRecorder.setOutputFile(file)
-        val profile = CamcorderProfile.get(0, CamcorderProfile.QUALITY_LOW)
+        val profile = CamcorderProfile.get(0, CamcorderProfile.QUALITY_HIGH)
         mediaRecorder.setVideoFrameRate(profile.videoFrameRate)
         mediaRecorder.setVideoSize(profile.videoFrameWidth, profile.videoFrameHeight)
         mediaRecorder.setVideoEncodingBitRate(profile.videoBitRate)
@@ -394,6 +397,7 @@ class CaptureActivity : AppCompatActivity() {
                     file
                 )
             )
+            finish()
             output = FileOutputStream(getFile("images", Environment.DIRECTORY_PICTURES, ".jpg"))
             output.write(bytes)
         } catch (e: IOException) {
